@@ -1,0 +1,269 @@
+{
+  "info": {
+    "_postman_id": "c87a3891-b1e9-4e12-8822-92134567abcd",
+    "name": "W3SCLOUD — Zoho CRM API Integration",
+    "description": "Comprehensive Postman collection for W3SCLOUD Technical Assessment evaluating Zoho CRM OAuth, Lead CRUD, token refresh, duplicate prevention, and centralized error handling.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "leadId",
+      "value": "716492000000382001",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "john.smith@example.com",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. System Health & Status",
+      "item": [
+        {
+          "name": "GET Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "GET OAuth Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication & Token Management",
+      "item": [
+        {
+          "name": "GET Initiate OAuth URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/zoho",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "zoho"]
+            }
+          }
+        },
+        {
+          "name": "POST Renew Access Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Leads CRUD Operations",
+      "item": [
+        {
+          "name": "GET Leads (Read Records - Feature #1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads?page=1&perPage=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "perPage", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Create Lead (Feature #2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.zohoRecordId) {",
+                  "    pm.collectionVariables.set('leadId', jsonData.data.zohoRecordId);",
+                  "    pm.collectionVariables.set('testEmail', jsonData.data.lead.email);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"company\": \"ABC Ltd\",\n  \"email\": \"john.smith.{{$timestamp}}@example.com\",\n  \"phone\": \"+8801712345678\",\n  \"leadStatus\": \"Not Contacted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"]
+            }
+          }
+        },
+        {
+          "name": "GET Lead by ID (Feature #3)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "{{leadId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Search Lead by Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads?searchEmail={{testEmail}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"],
+              "query": [
+                { "key": "searchEmail", "value": "{{testEmail}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Duplicate & Validation Handling",
+      "item": [
+        {
+          "name": "POST Duplicate Lead Conflict (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"Test\",\n  \"company\": \"ABC Ltd\",\n  \"email\": \"{{testEmail}}\",\n  \"phone\": \"+8801712345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"]
+            }
+          }
+        },
+        {
+          "name": "POST Missing Required Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Incomplete\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Error Handling Demonstrations",
+      "item": [
+        {
+          "name": "GET 403 OAUTH_SCOPE_MISMATCH Demo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/errors/scope-mismatch",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "errors", "scope-mismatch"]
+            }
+          }
+        },
+        {
+          "name": "GET 401 OAUTH_INVALID_TOKEN Demo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/errors/invalid-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "errors", "invalid-token"]
+            }
+          }
+        },
+        {
+          "name": "GET 404 ZOHO_INVALID_MODULE Demo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/errors/invalid-module",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "errors", "invalid-module"]
+            }
+          }
+        },
+        {
+          "name": "GET 429 TOO_MANY_REQUESTS Demo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/errors/rate-limit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "errors", "rate-limit"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

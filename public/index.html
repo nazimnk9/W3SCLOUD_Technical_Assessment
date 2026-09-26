@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>W3SCLOUD — Zoho CRM API Integration Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="layout">
+    <!-- Sidebar Header -->
+    <header class="header">
+      <div class="header-brand">
+        <div class="logo-badge">W3S</div>
+        <div>
+          <h1>Zoho CRM API Integration</h1>
+          <span class="subtitle">W3SCLOUD Technical Assessment Platform</span>
+        </div>
+      </div>
+      <div class="auth-status-bar">
+        <div class="status-indicator">
+          <span id="statusDot" class="dot dot-unknown"></span>
+          <span id="statusText">Checking status...</span>
+        </div>
+        <div class="header-actions">
+          <a id="authBtn" href="/auth/zoho?redirect=true" class="btn btn-primary btn-sm">🔗 Connect Zoho CRM</a>
+          <button id="refreshAuthBtn" class="btn btn-secondary btn-sm" title="Refresh Access Token">🔄 Renew
+            Token</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Section 1: Overview & OAuth Metadata -->
+      <section class="card auth-card">
+        <div class="card-header">
+          <h2>1. OAuth & Environment Overview</h2>
+          <span class="badge" id="envBadge">Development</span>
+        </div>
+        <div class="grid grid-4" id="oauthMetadata">
+          <div class="meta-item">
+            <span class="meta-label">Accounts URL</span>
+            <span class="meta-val" id="metaAccountsUrl">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">API Base URL</span>
+            <span class="meta-val" id="metaApiBaseUrl">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Access Token Status</span>
+            <span class="meta-val" id="metaTokenStatus">-</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Expires At</span>
+            <span class="meta-val" id="metaExpiresAt">-</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: CRUD Operations -->
+      <div class="grid grid-2">
+        <!-- Create Lead Card -->
+        <section class="card">
+          <div class="card-header">
+            <h2>2. Create Lead (POST /api/leads)</h2>
+            <span class="badge badge-blue">Feature #2 & Duplicate Prevention</span>
+          </div>
+          <form id="createLeadForm" class="form">
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" placeholder="e.g. John" value="John">
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name <span class="required">*</span></label>
+                <input type="text" id="lastName" name="lastName" placeholder="e.g. Smith" value="Smith" required>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="company">Company <span class="required">*</span></label>
+                <input type="text" id="company" name="company" placeholder="e.g. ABC Ltd" value="ABC Ltd" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="e.g. john.smith@example.com"
+                  value="john.smith@example.com" required>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" placeholder="e.g. +8801700000000" value="+8801700000000">
+              </div>
+              <div class="form-group">
+                <label for="leadStatus">Lead Status</label>
+                <select id="leadStatus" name="leadStatus">
+                  <option value="Not Contacted">Not Contacted</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Attempted to Contact">Attempted to Contact</option>
+                  <option value="Pre-Qualified">Pre-Qualified</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="btnSubmitLead">➕ Create Lead in Zoho</button>
+              <button type="button" class="btn btn-warning" id="btnTestDuplicate">⚠️ Test Duplicate Conflict</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Retrieve by Record ID Card -->
+        <section class="card">
+          <div class="card-header">
+            <h2>3. Retrieve Record by ID (GET /api/leads/:id)</h2>
+            <span class="badge badge-purple">Feature #3</span>
+          </div>
+          <p class="card-desc">Enter a Zoho Record ID to retrieve the exact CRM record.</p>
+          <div class="form-group">
+            <label for="searchRecordId">Zoho Record ID</label>
+            <div class="input-with-button">
+              <input type="text" id="searchRecordId" placeholder="e.g. 716492000000382001">
+              <button id="btnFetchById" class="btn btn-secondary">🔍 Fetch Record</button>
+            </div>
+          </div>
+          <div id="singleRecordResult" class="single-record-box">
+            <div class="placeholder-text">No record loaded yet. Enter an ID above or click a Lead row.</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Section 3: Read Records Table -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>4. Zoho CRM Leads List (GET /api/leads)</h2>
+            <p class="card-desc">Feature #1 — Displays Record ID, Name, Email, Company, Phone, and Status</p>
+          </div>
+          <div class="header-actions">
+            <button id="btnRefreshLeads" class="btn btn-outline btn-sm">🔄 Refresh List</button>
+            <div class="pagination-controls">
+              <button id="btnPrevPage" class="btn btn-sm btn-icon" disabled>◀</button>
+              <span id="pageIndicator">Page 1</span>
+              <button id="btnNextPage" class="btn btn-sm btn-icon">▶</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTableBody">
+              <tr>
+                <td colspan="7" class="text-center py-4">Click "Refresh List" or authorize Zoho to view records</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 4: Error Handling Scenarios -->
+      <section class="card">
+        <div class="card-header">
+          <h2>5. Error Handling & Scope Mismatch Demonstrations</h2>
+          <span class="badge badge-red">Requirement #5 & Interview Prep</span>
+        </div>
+        <p class="card-desc">Trigger standard and edge-case API errors to verify centralized error formatting and HTTP
+          status mapping.</p>
+        <div class="demo-buttons-grid">
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/scope-mismatch')">
+            🛑 403 OAUTH_SCOPE_MISMATCH
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/invalid-token')">
+            🔒 401 OAUTH_INVALID_TOKEN
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/invalid-module')">
+            📂 404 ZOHO_INVALID_MODULE
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/validation-error', 'POST')">
+            📝 400 VALIDATION_ERROR
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/rate-limit')">
+            ⏳ 429 TOO_MANY_REQUESTS
+          </button>
+        </div>
+      </section>
+
+      <!-- Section 5: Real-time Response Inspector -->
+      <section class="card">
+        <div class="card-header">
+          <h2>6. API Response Inspector</h2>
+          <span class="badge badge-mono" id="responseStatusBadge">Status: Ready</span>
+        </div>
+        <div class="response-container">
+          <pre id="responseJson"><code>// API responses will appear formatted here in real time...</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>W3SCLOUD Technical Assessment &bull; Zoho CRM API Integration &bull; Candidate: Md. Nazim Ahmed</div>
+      <div class="footer-links">
+        <a href="/health" target="_blank">Health Check API</a> &bull;
+        <a href="/auth/status" target="_blank">OAuth Status API</a> &bull;
+        <a href="/api/leads" target="_blank">Leads REST API</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
