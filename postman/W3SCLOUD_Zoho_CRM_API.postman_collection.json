@@ -262,6 +262,18 @@
               "path": ["api", "demo", "errors", "rate-limit"]
             }
           }
+        },
+        {
+          "name": "GET 502 ZOHO_UPSTREAM_UNAVAILABLE Demo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/errors/bad-gateway",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "errors", "bad-gateway"]
+            }
+          }
         }
       ]
     }

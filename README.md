@@ -122,9 +122,8 @@ Client / Dashboard / Postman
 ├── postman/                 # Postman Collection v2.1
 │   └── W3SCLOUD_Zoho_CRM_API.postman_collection.json
 ├── tests/                   # Vitest automated test suite
-├── .env.example             # Safe environment template
-├── DEMO_SCRIPT.md           # Step-by-step video recording walkthrough
-├── INTERVIEW_PREPARATION.md # In-depth technical questions & answers
+├── Ten Technical Questions/ # Part 2 — Ten Technical Questions solutions
+│   └── TEN_TECHNICAL_QUESTIONS.md
 ├── AI_USAGE.md              # AI assistance disclosure
 └── ASSESSMENT_CHECKLIST.md  # Complete requirement compliance verification
 ```
@@ -253,6 +252,7 @@ npm test
 | `GET` | `/api/demo/errors/invalid-module` | Demonstrates `404 ZOHO_INVALID_MODULE` |
 | `POST` | `/api/demo/errors/validation-error` | Demonstrates `400 VALIDATION_ERROR` |
 | `GET` | `/api/demo/errors/rate-limit` | Demonstrates `429 TOO_MANY_REQUESTS` |
+| `GET` | `/api/demo/errors/bad-gateway` | Demonstrates `502 ZOHO_UPSTREAM_UNAVAILABLE` |
 
 ---
 
@@ -466,3 +466,15 @@ The collection contains pre-configured requests, environment variables (`{{baseU
 - **Position**: Software Engineer
 - **Target Company**: W3SCLOUD
 - **Technology Stack**: Node.js, TypeScript, Express.js, Axios, Zod, Vitest
+
+---
+
+## 21. Implementation Highlights & Changelog
+
+| Feature / Area | Description of Changes & Improvements | Affected Files |
+|---|---|---|
+| **502 Bad Gateway & Upstream Fault Handling** | Added comprehensive error classification for Zoho CRM server/gateway errors, returning structured diagnostics, documentation hints, and a professional error modal with a `🔄 Retry Request` button. | [`src/middleware/error-handler.middleware.ts`](file:///src/middleware/error-handler.middleware.ts), [`src/controllers/error-demo.controller.ts`](file:///src/controllers/error-demo.controller.ts), [`public/app.js`](file:///public/app.js), [`public/style.css`](file:///public/style.css) |
+| **502 Error Demo & Postman Sync** | Added `GET /api/demo/errors/bad-gateway` endpoint in backend routes, Step 5 demo UI button, and Postman collection v2.1. | [`src/routes/demo.routes.ts`](file:///src/routes/demo.routes.ts), [`public/index.html`](file:///public/index.html), [`postman/`](file:///postman/) |
+| **Dynamic Numbered Pagination Bar** | Added numbered page selector buttons above the Leads table that dynamically calculate total discovered pages from Zoho API pagination responses. | [`public/index.html`](file:///public/index.html), [`public/app.js`](file:///public/app.js), [`public/style.css`](file:///public/style.css) |
+| **UI Aesthetics & Margin Polish** | Polished margins and alignment between step badges, sequence navigation pills, and section titles for clean visual hierarchy. | [`public/style.css`](file:///public/style.css) |
+| **Part 2 Assessment Document Restructuring** | Organized all 10 technical questions and answers strictly matching the PDF specification under a dedicated folder structure. | [`Ten Technical Questions/TEN_TECHNICAL_QUESTIONS.md`](file:///Ten%20Technical%20Questions/TEN_TECHNICAL_QUESTIONS.md) |
