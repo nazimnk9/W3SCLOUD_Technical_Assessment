@@ -15,13 +15,13 @@
 
 <body>
   <div class="layout">
-    <!-- Sidebar Header -->
+    <!-- Header -->
     <header class="header">
       <div class="header-brand">
         <div class="logo-badge">W3S</div>
         <div>
           <h1>Zoho CRM API Integration</h1>
-          <span class="subtitle">W3SCLOUD Technical Assessment Platform</span>
+          <span class="subtitle">W3SCLOUD Technical Assessment Platform &bull; Candidate: Md. Nazim Ahmed</span>
         </div>
       </div>
       <div class="auth-status-bar">
@@ -31,19 +31,50 @@
         </div>
         <div class="header-actions">
           <a id="authBtn" href="/auth/zoho?redirect=true" class="btn btn-primary btn-sm">🔗 Connect Zoho CRM</a>
-          <button id="refreshAuthBtn" class="btn btn-secondary btn-sm" title="Refresh Access Token">🔄 Renew
-            Token</button>
+          <button id="refreshAuthBtn" class="btn btn-secondary btn-sm" title="Refresh Access Token">🔄 Renew Token</button>
         </div>
       </div>
     </header>
 
+    <!-- Sequence Navigation Tracker -->
+    <nav class="sequence-nav">
+      <div class="sequence-pill" onclick="document.getElementById('sec-auth').scrollIntoView({behavior: 'smooth'})">
+        <span class="step-num">1</span>
+        <span class="step-title">Authentication</span>
+      </div>
+      <div class="sequence-arrow">&rarr;</div>
+      <div class="sequence-pill" onclick="document.getElementById('sec-read').scrollIntoView({behavior: 'smooth'})">
+        <span class="step-num">2</span>
+        <span class="step-title">Read Data</span>
+      </div>
+      <div class="sequence-arrow">&rarr;</div>
+      <div class="sequence-pill" onclick="document.getElementById('sec-insert').scrollIntoView({behavior: 'smooth'})">
+        <span class="step-num">3</span>
+        <span class="step-title">Insert Data</span>
+      </div>
+      <div class="sequence-arrow">&rarr;</div>
+      <div class="sequence-pill" onclick="document.getElementById('sec-retrieve').scrollIntoView({behavior: 'smooth'})">
+        <span class="step-num">4</span>
+        <span class="step-title">Retrieve by ID</span>
+      </div>
+      <div class="sequence-arrow">&rarr;</div>
+      <div class="sequence-pill" onclick="document.getElementById('sec-errors').scrollIntoView({behavior: 'smooth'})">
+        <span class="step-num">5</span>
+        <span class="step-title">Error Handling</span>
+      </div>
+    </nav>
+
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Section 1: Overview & OAuth Metadata -->
-      <section class="card auth-card">
+      <!-- STEP 1: Authentication -->
+      <section id="sec-auth" class="card auth-card">
         <div class="card-header">
-          <h2>1. OAuth & Environment Overview</h2>
-          <span class="badge" id="envBadge">Development</span>
+          <div>
+            <span class="badge badge-blue">Step 1</span>
+            <h2>1. Authentication (Zoho CRM OAuth 2.0 Flow)</h2>
+            <p class="card-desc">Obtains an access token through the proper OAuth 2.0 authorization code flow. Zero hardcoded tokens.</p>
+          </div>
+          <span class="badge badge-green" id="envBadge">OAuth 2.0 Active</span>
         </div>
         <div class="grid grid-4" id="oauthMetadata">
           <div class="meta-item">
@@ -63,15 +94,73 @@
             <span class="meta-val" id="metaExpiresAt">-</span>
           </div>
         </div>
+        <div class="auth-action-row" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <a href="/auth/zoho?redirect=true" class="btn btn-primary">🔗 Authorize / Connect Zoho CRM</a>
+          <button id="btnManualRefresh" class="btn btn-secondary">🔄 Test Token Renewal (POST /auth/refresh)</button>
+        </div>
       </section>
 
-      <!-- Section 2: CRUD Operations -->
+      <!-- STEP 2: Read Data -->
+      <section id="sec-read" class="card">
+        <div class="card-header">
+          <div>
+            <span class="badge badge-purple">Step 2</span>
+            <h2>2. Read Data (GET /api/leads)</h2>
+            <p class="card-desc">Retrieves records from Zoho CRM. Displays <strong>Record ID</strong>, <strong>Name</strong>, <strong>Email</strong>, and additional fields (<strong>Company</strong>, <strong>Phone</strong>, <strong>Status</strong>).</p>
+          </div>
+          <div class="header-actions">
+            <button id="btnRefreshLeads" class="btn btn-outline btn-sm">🔄 Refresh Records List</button>
+            <div class="pagination-controls">
+              <button id="btnPrevPage" class="btn btn-sm btn-icon" disabled>◀</button>
+              <span id="pageIndicator">Page 1</span>
+              <button id="btnNextPage" class="btn btn-sm btn-icon">▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination Numbers Bar on top of table-container -->
+        <div class="pagination-bar" id="paginationBar">
+          <div class="pagination-pages-label" style="display:flex; align-items:center; gap:0.5rem;">
+            <span>📑 Select Page:</span>
+            <span class="badge badge-mono" id="totalPagesBadge" style="font-size:0.75rem;">Total Pages: 1</span>
+          </div>
+          <div class="page-numbers-list" id="pageNumbersList">
+            <!-- Dynamically generated from GET API response -->
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Phone</th>
+                <th>Lead Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTableBody">
+              <tr>
+                <td colspan="7" class="text-center py-4">Click "Refresh Records List" or authorize Zoho to view records</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- STEP 3 & STEP 4 in a balanced 2-column grid -->
       <div class="grid grid-2">
-        <!-- Create Lead Card -->
-        <section class="card">
+        <!-- STEP 3: Insert Data -->
+        <section id="sec-insert" class="card">
           <div class="card-header">
-            <h2>2. Create Lead (POST /api/leads)</h2>
-            <span class="badge badge-blue">Feature #2 & Duplicate Prevention</span>
+            <div>
+              <span class="badge badge-blue">Step 3</span>
+              <h2>3. Insert Data (POST /api/leads)</h2>
+              <p class="card-desc">Creates a new Lead in Zoho CRM using First Name, Last Name, Company, Email, Phone, and Status.</p>
+            </div>
           </div>
           <form id="createLeadForm" class="form">
             <div class="grid grid-2">
@@ -111,102 +200,70 @@
               </div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" id="btnSubmitLead">➕ Create Lead in Zoho</button>
-              <button type="button" class="btn btn-warning" id="btnTestDuplicate">⚠️ Test Duplicate Conflict</button>
+              <button type="submit" class="btn btn-primary" id="btnSubmitLead">➕ Create Lead in Zoho CRM</button>
+              <button type="button" class="btn btn-warning" id="btnTestDuplicate" title="Tests proactive email search before insertion">⚠️ Test Duplicate Conflict (409)</button>
             </div>
           </form>
         </section>
 
-        <!-- Retrieve by Record ID Card -->
-        <section class="card">
+        <!-- STEP 4: Retrieve Inserted Record -->
+        <section id="sec-retrieve" class="card">
           <div class="card-header">
-            <h2>3. Retrieve Record by ID (GET /api/leads/:id)</h2>
-            <span class="badge badge-purple">Feature #3</span>
+            <div>
+              <span class="badge badge-purple">Step 4</span>
+              <h2>4. Retrieve Record by ID (GET /api/leads/:id)</h2>
+              <p class="card-desc">Retrieves the inserted record from Zoho CRM using its returned Record ID.</p>
+            </div>
           </div>
-          <p class="card-desc">Enter a Zoho Record ID to retrieve the exact CRM record.</p>
           <div class="form-group">
-            <label for="searchRecordId">Zoho Record ID</label>
+            <label for="searchRecordId">Zoho Record ID (Auto-populated upon Step 3 creation or row click)</label>
             <div class="input-with-button">
               <input type="text" id="searchRecordId" placeholder="e.g. 716492000000382001">
               <button id="btnFetchById" class="btn btn-secondary">🔍 Fetch Record</button>
             </div>
           </div>
           <div id="singleRecordResult" class="single-record-box">
-            <div class="placeholder-text">No record loaded yet. Enter an ID above or click a Lead row.</div>
+            <div class="placeholder-text">No record loaded yet. Create a Lead in Step 3 or click "View" on any row in Step 2.</div>
           </div>
         </section>
       </div>
 
-      <!-- Section 3: Read Records Table -->
+      <!-- STEP 5: Error Handling Demonstrations -->
+      <section id="sec-errors" class="card">
+        <div class="card-header">
+          <div>
+            <span class="badge badge-red">Step 5</span>
+            <h2>5. Error Handling Demonstrations</h2>
+            <p class="card-desc">Demonstrates structured handling of invalid/expired tokens, missing required fields, invalid modules, scope mismatches, and rate limits.</p>
+          </div>
+          <span class="badge badge-red">HTTP & API Error Demos</span>
+        </div>
+        <div class="demo-buttons-grid">
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/invalid-token')">
+            🔒 401 Invalid / Expired Token
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/validation-error', 'POST')">
+            📝 400 Missing Required Field
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/invalid-module')">
+            📂 404 Invalid CRM Module
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/scope-mismatch')">
+            🛑 403 OAuth Scope Mismatch
+          </button>
+          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/rate-limit')">
+            ⏳ 429 Too Many Requests
+          </button>
+        </div>
+      </section>
+
+      <!-- Real-Time API Response Inspector -->
       <section class="card">
         <div class="card-header">
           <div>
-            <h2>4. Zoho CRM Leads List (GET /api/leads)</h2>
-            <p class="card-desc">Feature #1 — Displays Record ID, Name, Email, Company, Phone, and Status</p>
+            <h2>Real-Time API Response Inspector</h2>
+            <p class="card-desc">Live JSON output for requests made across Steps 1 through 5.</p>
           </div>
-          <div class="header-actions">
-            <button id="btnRefreshLeads" class="btn btn-outline btn-sm">🔄 Refresh List</button>
-            <div class="pagination-controls">
-              <button id="btnPrevPage" class="btn btn-sm btn-icon" disabled>◀</button>
-              <span id="pageIndicator">Page 1</span>
-              <button id="btnNextPage" class="btn btn-sm btn-icon">▶</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Record ID</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Company</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="leadsTableBody">
-              <tr>
-                <td colspan="7" class="text-center py-4">Click "Refresh List" or authorize Zoho to view records</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Section 4: Error Handling Scenarios -->
-      <section class="card">
-        <div class="card-header">
-          <h2>5. Error Handling & Scope Mismatch Demonstrations</h2>
-          <span class="badge badge-red">Requirement #5 & Interview Prep</span>
-        </div>
-        <p class="card-desc">Trigger standard and edge-case API errors to verify centralized error formatting and HTTP
-          status mapping.</p>
-        <div class="demo-buttons-grid">
-          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/scope-mismatch')">
-            🛑 403 OAUTH_SCOPE_MISMATCH
-          </button>
-          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/invalid-token')">
-            🔒 401 OAUTH_INVALID_TOKEN
-          </button>
-          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/invalid-module')">
-            📂 404 ZOHO_INVALID_MODULE
-          </button>
-          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/validation-error', 'POST')">
-            📝 400 VALIDATION_ERROR
-          </button>
-          <button class="btn btn-danger-outline" onclick="triggerError('/api/demo/errors/rate-limit')">
-            ⏳ 429 TOO_MANY_REQUESTS
-          </button>
-        </div>
-      </section>
-
-      <!-- Section 5: Real-time Response Inspector -->
-      <section class="card">
-        <div class="card-header">
-          <h2>6. API Response Inspector</h2>
           <span class="badge badge-mono" id="responseStatusBadge">Status: Ready</span>
         </div>
         <div class="response-container">
@@ -224,6 +281,71 @@
         <a href="/api/leads" target="_blank">Leads REST API</a>
       </div>
     </footer>
+  </div>
+
+  <!-- Global Loading Overlay for GET APIs -->
+  <div id="globalLoader" class="loader-overlay hidden">
+    <div class="loader-card">
+      <div class="spinner-dual-ring"></div>
+      <div class="loader-text" id="loaderText">Fetching data from Zoho CRM...</div>
+      <div class="loader-subtext">Executing secure API request</div>
+    </div>
+  </div>
+
+  <!-- Beautiful Success Modal for POST APIs -->
+  <div id="successModal" class="modal-overlay hidden">
+    <div class="modal-card modal-card-success">
+      <button class="modal-close" onclick="closeSuccessModal()" title="Close">&times;</button>
+      <div class="modal-icon-wrapper">
+        <div class="success-checkmark-circle">
+          <svg viewBox="0 0 52 52" class="checkmark-svg">
+            <circle class="checkmark-circle-bg" cx="26" cy="26" r="23" fill="none"/>
+            <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+        </div>
+      </div>
+      <h3 class="modal-title" id="modalTitle">Operation Successful!</h3>
+      <p class="modal-message" id="modalMessage">Your data has been successfully processed and synced with Zoho CRM.</p>
+      
+      <div class="modal-details-box" id="modalDetailsBox">
+        <!-- Dynamically filled with record details -->
+      </div>
+
+      <div class="modal-actions">
+        <button id="modalActionBtn" class="btn btn-primary" onclick="handleModalAction()">🔍 View Record in Step 4</button>
+        <button class="btn btn-secondary" onclick="closeSuccessModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Beautiful Error Modal for POST APIs -->
+  <div id="errorModal" class="modal-overlay hidden">
+    <div class="modal-card modal-card-error">
+      <button class="modal-close" onclick="closeErrorModal()" title="Close">&times;</button>
+      <div class="modal-icon-wrapper">
+        <div class="error-cross-circle">
+          <svg viewBox="0 0 52 52" class="cross-svg">
+            <circle class="cross-circle-bg" cx="26" cy="26" r="23" fill="none"/>
+            <path class="cross-line-1" fill="none" d="M16 16 36 36"/>
+            <path class="cross-line-2" fill="none" d="M36 16 16 36"/>
+          </svg>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
+        <span class="badge badge-red" id="errorStatusCodeBadge">Error</span>
+      </div>
+      <h3 class="modal-title" id="errorModalTitle">Request Failed</h3>
+      <p class="modal-message" id="errorModalMessage">An error occurred while processing your request.</p>
+      
+      <div class="modal-details-box error-details-box" id="errorModalDetailsBox">
+        <!-- Dynamically filled with error details -->
+      </div>
+
+      <div class="modal-actions">
+        <button id="errorModalActionBtn" class="btn btn-primary" style="display:none;" onclick="handleErrorModalAction()">🔍 Action</button>
+        <button class="btn btn-secondary" onclick="closeErrorModal()">Understood</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
