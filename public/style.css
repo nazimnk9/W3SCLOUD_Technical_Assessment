@@ -159,6 +159,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 0.4rem;
+  flex-shrink: 0;
 }
 
 .sequence-pill .step-title {
@@ -186,13 +188,20 @@ body {
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1rem;
+}
+
+.card-header .badge {
+  display: inline-block;
+  margin-bottom: 0.45rem;
 }
 
 .card-header h2 {
   font-size: 1.1rem;
   font-weight: 600;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 .card-desc {
@@ -251,12 +260,15 @@ body {
 
 /* Badges */
 .badge {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.6rem;
   border-radius: 9999px;
   background: #374151;
   color: #d1d5db;
+  line-height: 1.2;
 }
 
 .badge-blue { background: #1e3a8a; color: #93c5fd; }
