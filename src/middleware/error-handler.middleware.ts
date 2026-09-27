@@ -51,6 +51,9 @@ export const errorHandler = (
   } else if (errorCode === ErrorCode.OAUTH_INVALID_TOKEN || errorCode === ErrorCode.OAUTH_UNAUTHORIZED) {
     documentationHelp =
       'The access token is invalid or missing. Please initiate the OAuth flow at /auth/zoho or provide a valid ZOHO_REFRESH_TOKEN in your .env configuration.';
+  } else if (statusCode === 502 || errorCode === ErrorCode.ZOHO_UPSTREAM_UNAVAILABLE || zohoCode === 'INTERNAL_SERVER_ERROR') {
+    documentationHelp =
+      'Upstream Zoho CRM Server Error (502 Bad Gateway): The remote Zoho CRM API server encountered an internal error or gateway anomaly. Please retry your request shortly or check status.zoho.com.';
   }
 
   // Log error safely with redactions

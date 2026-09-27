@@ -18,4 +18,7 @@ router.post('/errors/validation-error', errorDemoController.triggerValidationErr
 // GET /api/demo/errors/rate-limit - Demonstrates 429 Rate Limit
 router.get('/errors/rate-limit', errorDemoController.triggerRateLimit);
 
+// GET /api/demo/errors/bad-gateway - Demonstrates 502 ZOHO_UPSTREAM_UNAVAILABLE / Zoho Server Error
+router.get('/errors/bad-gateway', errorDemoController.triggerBadGateway);
+
 export default router;

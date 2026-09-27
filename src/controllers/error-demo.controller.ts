@@ -83,6 +83,29 @@ export class ErrorDemoController {
       next(err);
     }
   };
+
+  /**
+   * Demonstrates HTTP 502 ZOHO_UPSTREAM_UNAVAILABLE / Zoho CRM Internal Server Error
+   */
+  public triggerBadGateway = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      throw new ZohoApiError(
+        'Upstream Zoho CRM server encountered an internal error. The remote gateway could not complete the request.',
+        HTTP_STATUS.BAD_GATEWAY,
+        ErrorCode.ZOHO_UPSTREAM_UNAVAILABLE,
+        'INTERNAL_SERVER_ERROR',
+        502,
+        {
+          upstreamService: 'Zoho CRM Cloud REST API v8',
+          gatewayNode: 'zoho-crm-us-east-gateway-02',
+          timestamp: new Date().toISOString(),
+          resolution: 'Retry the request or verify Zoho CRM API availability at status.zoho.com'
+        }
+      );
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 export const errorDemoController = new ErrorDemoController();

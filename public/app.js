@@ -104,7 +104,15 @@ function handleModalAction() {
 }
 
 // Error Modal
-function showErrorModal({ title, message, statusCode = 'Error', details = [], actionText = null, onAction = null }) {
+function showErrorModal({
+  title,
+  message,
+  statusCode = 'Error',
+  details = [],
+  helpText = null,
+  actionText = null,
+  onAction = null,
+}) {
   const modal = document.getElementById('errorModal');
   const titleEl = document.getElementById('errorModalTitle');
   const messageEl = document.getElementById('errorModalMessage');
@@ -112,27 +120,60 @@ function showErrorModal({ title, message, statusCode = 'Error', details = [], ac
   const detailsBox = document.getElementById('errorModalDetailsBox');
   const actionBtn = document.getElementById('errorModalActionBtn');
 
-  if (titleEl) titleEl.textContent = title || 'Request Failed';
-  if (messageEl) messageEl.textContent = message || 'An error occurred while processing the request.';
-  if (badgeEl) badgeEl.textContent = `HTTP ${statusCode}`;
+  const is502 = statusCode === 502 || statusCode === '502' || statusCode === 'BAD_GATEWAY';
+
+  if (is502) {
+    if (badgeEl) {
+      badgeEl.textContent = 'HTTP 502 • Bad Gateway';
+      badgeEl.className = 'badge badge-red';
+    }
+    if (titleEl) titleEl.textContent = title || '☁️ Zoho CRM Server Error (502 Bad Gateway)';
+    if (messageEl) {
+      messageEl.textContent =
+        message ||
+        'The upstream Zoho CRM API server encountered an internal server error or gateway anomaly while processing this request.';
+    }
+  } else {
+    if (badgeEl) {
+      badgeEl.textContent = `HTTP ${statusCode}`;
+      badgeEl.className = statusCode === 409 ? 'badge badge-purple' : 'badge badge-red';
+    }
+    if (titleEl) titleEl.textContent = title || 'Request Failed';
+    if (messageEl) messageEl.textContent = message || 'An error occurred while processing the request.';
+  }
 
   if (detailsBox) {
-    if (details && details.length > 0) {
+    if ((details && details.length > 0) || helpText) {
       detailsBox.style.display = 'block';
-      detailsBox.innerHTML = `
-        <div class="modal-details-grid">
-          ${details
-            .map(
-              (item) => `
-            <div class="modal-detail-item">
-              <span class="modal-detail-label">${escapeHtml(item.label)}</span>
-              <span class="modal-detail-val">${escapeHtml(item.value)}</span>
-            </div>
-          `
-            )
-            .join('')}
-        </div>
-      `;
+      let html = '';
+
+      if (details && details.length > 0) {
+        html += `
+          <div class="modal-details-grid">
+            ${details
+              .map(
+                (item) => `
+              <div class="modal-detail-item ${item.fullWidth ? 'full-width' : ''}">
+                <span class="modal-detail-label">${escapeHtml(item.label)}</span>
+                <span class="modal-detail-val">${escapeHtml(item.value)}</span>
+              </div>
+            `
+              )
+              .join('')}
+          </div>
+        `;
+      }
+
+      if (helpText) {
+        html += `
+          <div class="modal-help-banner">
+            <span class="modal-help-icon">💡</span>
+            <span class="modal-help-text">${escapeHtml(helpText)}</span>
+          </div>
+        `;
+      }
+
+      detailsBox.innerHTML = html;
     } else {
       detailsBox.style.display = 'none';
       detailsBox.innerHTML = '';
@@ -151,6 +192,118 @@ function showErrorModal({ title, message, statusCode = 'Error', details = [], ac
   }
 
   if (modal) modal.classList.remove('hidden');
+}
+
+// Professional API Error Handler & Modal Generator
+function handleGenericApiError(res, data, { fallbackTitle = '❌ Request Failed', onRetry = null } = {}) {
+  const status = res?.status || (typeof res === 'number' ? res : 500);
+  const is502 = status === 502;
+  const is401 = status === 401;
+  const is403 = status === 403;
+  const is404 = status === 404;
+  const is429 = status === 429;
+  const is409 = status === 409;
+  const is400 = status === 400;
+
+  let title = fallbackTitle;
+  let message = data?.message || 'An error occurred while processing the request.';
+  const details = [];
+
+  if (is502) {
+    title = '☁️ Zoho CRM Server Error (502 Bad Gateway)';
+    message =
+      data?.message ||
+      'The upstream Zoho CRM API server encountered an internal server error or gateway anomaly while executing this operation.';
+    details.push({ label: 'Upstream Service', value: 'Zoho CRM Cloud REST API v8' });
+    details.push({ label: 'Error Code', value: data?.error?.code || 'ZOHO_UPSTREAM_UNAVAILABLE' });
+    if (data?.error?.zohoCode) {
+      details.push({ label: 'Remote Zoho Status', value: data.error.zohoCode });
+    }
+    if (data?.error?.details?.gatewayNode) {
+      details.push({ label: 'Gateway Node', value: data.error.details.gatewayNode });
+    }
+    details.push({
+      label: 'Root Cause & Diagnosis',
+      value: 'Remote Zoho API server returned an internal 502 Bad Gateway response or is temporarily unreachable.',
+      fullWidth: true,
+    });
+  } else if (is401) {
+    title = '🔒 Zoho CRM Authentication Failed (401)';
+    details.push({ label: 'Error Code', value: data?.error?.code || 'OAUTH_INVALID_TOKEN' });
+    details.push({ label: 'Token Status', value: 'Access Token Missing or Expired' });
+  } else if (is403) {
+    title = '🛑 OAuth Scope Mismatch (403)';
+    details.push({ label: 'Error Code', value: data?.error?.code || 'OAUTH_SCOPE_MISMATCH' });
+    details.push({ label: 'Required Permission', value: 'ZohoCRM.modules.ALL, ZohoCRM.settings.ALL' });
+  } else if (is404) {
+    title = '📂 Record / Module Not Found (404)';
+    details.push({ label: 'Error Code', value: data?.error?.code || 'NOT_FOUND' });
+  } else if (is429) {
+    title = '⏳ Rate Limit Exceeded (429)';
+    details.push({ label: 'Error Code', value: data?.error?.code || 'ZOHO_RATE_LIMIT_EXCEEDED' });
+    details.push({ label: 'Rate Limit Info', value: 'Zoho CRM API concurrency threshold reached.' });
+  } else if (is400) {
+    title = '📝 400 Validation Error';
+    details.push({ label: 'Error Code', value: data?.error?.code || 'VALIDATION_ERROR' });
+    if (data?.error?.details?.fields) {
+      details.push({
+        label: 'Missing / Invalid Fields',
+        value: Object.entries(data.error.details.fields)
+          .map(([f, msg]) => `${f}: ${Array.isArray(msg) ? msg.join(', ') : msg}`)
+          .join(' | '),
+        fullWidth: true,
+      });
+    }
+  } else if (is409) {
+    title = '⚠️ Duplicate Lead Conflict (409)';
+    details.push({ label: 'Error Code', value: data?.error?.code || 'CONFLICT' });
+    if (data?.error?.details?.existingRecordId) {
+      details.push({ label: 'Existing Record ID', value: data.error.details.existingRecordId });
+    }
+    if (data?.error?.details?.existingName) {
+      details.push({ label: 'Existing Name', value: data.error.details.existingName });
+    }
+  } else {
+    if (data?.error?.code) details.push({ label: 'Error Code', value: data.error.code });
+  }
+
+  const helpText =
+    data?.error?.documentationHelp ||
+    (is502
+      ? 'Recommended Resolution: Wait 5-10 seconds and retry the operation, or verify Zoho CRM service status at status.zoho.com.'
+      : is401
+      ? 'Recommended Resolution: Click "Re-authorize Zoho CRM" to initiate the OAuth 2.0 authorization flow.'
+      : null);
+
+  const actionText = onRetry
+    ? '🔄 Retry Request'
+    : is401
+    ? '🔗 Re-authorize Zoho CRM'
+    : data?.error?.details?.existingRecordId
+    ? '🔍 View Existing in Step 4'
+    : null;
+
+  const onAction = onRetry
+    ? onRetry
+    : is401
+    ? () => {
+        window.location.href = '/auth/zoho?redirect=true';
+      }
+    : data?.error?.details?.existingRecordId
+    ? () => {
+        selectLead(data.error.details.existingRecordId);
+      }
+    : null;
+
+  showErrorModal({
+    title,
+    message,
+    statusCode: status,
+    details,
+    helpText,
+    actionText,
+    onAction,
+  });
 }
 
 function closeErrorModal() {
@@ -247,23 +400,14 @@ async function refreshAuthToken() {
         onAction: null,
       });
     } else {
-      showErrorModal({
-        title: '❌ Token Renewal Failed',
-        message: data.message || 'Failed to renew Zoho CRM access token.',
-        statusCode: res.status,
-        details: [
-          { label: 'Error Code', value: data.error?.code || 'AUTH_ERROR' },
-          { label: 'Details', value: data.error?.details?.error || 'Check Zoho Client Credentials in .env' },
-        ],
+      handleGenericApiError(res, data, {
+        fallbackTitle: '❌ Token Renewal Failed',
+        onRetry: () => refreshAuthToken(),
       });
     }
   } catch (err) {
     displayResponse(500, { error: err.message });
-    showErrorModal({
-      title: '❌ Connection Error',
-      message: err.message,
-      statusCode: 500,
-    });
+    handleGenericApiError(500, { message: err.message }, { fallbackTitle: '❌ Connection Error' });
   } finally {
     hideLoader();
   }
@@ -362,6 +506,12 @@ async function fetchLeads(page = 1) {
     } else {
       renderPageNumbers(maxDiscoveredPages);
       tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4" style="color:var(--accent-red)">${escapeHtml(data.message || 'Error loading leads')}</td></tr>`;
+      if (res.status === 502) {
+        handleGenericApiError(res, data, {
+          fallbackTitle: '☁️ Zoho CRM Server Error (502 Bad Gateway)',
+          onRetry: () => fetchLeads(page),
+        });
+      }
     }
   } catch (err) {
     displayResponse(500, { error: err.message });
@@ -430,44 +580,14 @@ async function handleCreateLead(e) {
         },
       });
     } else {
-      // Show error modal on failed POST
-      const errDetails = [];
-      if (data.error?.code) errDetails.push({ label: 'Error Code', value: data.error.code });
-      if (data.error?.details?.existingRecordId) {
-        errDetails.push({ label: 'Existing Record ID', value: data.error.details.existingRecordId });
-      }
-      if (data.error?.details?.existingName) {
-        errDetails.push({ label: 'Existing Name', value: data.error.details.existingName });
-      }
-      if (data.error?.details?.fields) {
-        errDetails.push({
-          label: 'Validation Issues',
-          value: Object.entries(data.error.details.fields)
-            .map(([f, msgs]) => `${f}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
-            .join(' | '),
-        });
-      }
-
-      showErrorModal({
-        title: res.status === 409 ? '⚠️ Duplicate Lead Conflict' : '❌ Lead Creation Failed',
-        message: data.message || 'Could not create Lead in Zoho CRM.',
-        statusCode: res.status,
-        details: errDetails,
-        actionText: data.error?.details?.existingRecordId ? '🔍 View Existing in Step 4' : null,
-        onAction: data.error?.details?.existingRecordId
-          ? () => {
-              selectLead(data.error.details.existingRecordId);
-            }
-          : null,
+      handleGenericApiError(res, data, {
+        fallbackTitle: res.status === 409 ? '⚠️ Duplicate Lead Conflict' : '❌ Lead Creation Failed',
+        onRetry: res.status === 502 ? () => handleCreateLead(e) : null,
       });
     }
   } catch (err) {
     displayResponse(500, { error: err.message });
-    showErrorModal({
-      title: '❌ Connection Error',
-      message: err.message,
-      statusCode: 500,
-    });
+    handleGenericApiError(500, { message: err.message }, { fallbackTitle: '❌ Connection Error' });
   } finally {
     hideLoader();
   }
@@ -503,32 +623,14 @@ async function handleTestDuplicate() {
         details: [{ label: 'Zoho Record ID', value: data.data?.zohoRecordId || 'Created' }],
       });
     } else {
-      // 409 Conflict Detected
-      showErrorModal({
-        title: '⚠️ Duplicate Conflict Detected (409)',
-        message: data.message || `A Lead with email '${email}' already exists in Zoho CRM.`,
-        statusCode: res.status,
-        details: [
-          { label: 'Error Code', value: data.error?.code || 'CONFLICT' },
-          { label: 'Conflict Email', value: email },
-          { label: 'Existing Record ID', value: data.error?.details?.existingRecordId || 'N/A' },
-          { label: 'Existing Name', value: data.error?.details?.existingName || 'N/A' },
-        ],
-        actionText: data.error?.details?.existingRecordId ? '🔍 View Existing in Step 4' : null,
-        onAction: data.error?.details?.existingRecordId
-          ? () => {
-              selectLead(data.error.details.existingRecordId);
-            }
-          : null,
+      handleGenericApiError(res, data, {
+        fallbackTitle: '⚠️ Duplicate Conflict Detected (409)',
+        onRetry: res.status === 502 ? () => handleTestDuplicate() : null,
       });
     }
   } catch (err) {
     displayResponse(500, { error: err.message });
-    showErrorModal({
-      title: '❌ Connection Error',
-      message: err.message,
-      statusCode: 500,
-    });
+    handleGenericApiError(500, { message: err.message }, { fallbackTitle: '❌ Connection Error' });
   } finally {
     hideLoader();
   }
@@ -564,6 +666,12 @@ async function handleFetchById() {
             ❌ ${escapeHtml(data.message || 'Lead not found')}
           </div>
         `;
+      }
+      if (res.status === 502) {
+        handleGenericApiError(res, data, {
+          fallbackTitle: '☁️ Zoho CRM Server Error (502 Bad Gateway)',
+          onRetry: () => handleFetchById(),
+        });
       }
     }
   } catch (err) {
@@ -616,31 +724,15 @@ async function triggerError(endpoint, method = 'GET') {
     const data = await res.json();
     displayResponse(res.status, data);
 
-    if (method === 'POST' && !res.ok) {
-      showErrorModal({
-        title: '📝 400 Validation Error Demo',
-        message: data.message || 'Payload validation failed.',
-        statusCode: res.status,
-        details: [
-          { label: 'Error Code', value: data.error?.code || 'VALIDATION_ERROR' },
-          {
-            label: 'Missing Fields',
-            value: data.error?.details?.fields
-              ? Object.entries(data.error.details.fields)
-                  .map(([f, msg]) => `${f}: ${Array.isArray(msg) ? msg.join(', ') : msg}`)
-                  .join(' | ')
-              : 'lastName, company, email are required',
-          },
-        ],
+    if (!res.ok) {
+      handleGenericApiError(res, data, {
+        fallbackTitle: 'API Error Demo',
+        onRetry: () => triggerError(endpoint, method),
       });
     }
   } catch (err) {
     displayResponse(500, { error: err.message });
-    showErrorModal({
-      title: '❌ Connection Error',
-      message: err.message,
-      statusCode: 500,
-    });
+    handleGenericApiError(500, { message: err.message }, { fallbackTitle: '❌ Connection Error' });
   } finally {
     hideLoader();
   }

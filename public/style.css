@@ -885,4 +885,26 @@ select:focus {
   background: rgba(69, 10, 10, 0.3);
 }
 
+.modal-detail-item.full-width {
+  grid-column: 1 / -1;
+}
 
+.modal-help-banner {
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(30, 58, 138, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #bfdbfe;
+  line-height: 1.45;
+}
+
+.modal-help-banner .modal-help-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
